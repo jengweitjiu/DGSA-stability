@@ -1,0 +1,72 @@
+# ============================================================
+# DGSA-stability: Simulation Parameters
+# ============================================================
+# All parameters correspond to values reported in the manuscript
+# Methods section. Changing these values will alter results.
+# ============================================================
+
+# Master random seed for reproducibility
+master_seed: 42
+
+# --- Classifier ---
+classifier:
+  penalty: "l2"
+  C: 1.0
+  solver: "lbfgs"
+  max_iter: 1000
+  n_splits: 5           # Stratified k-fold cross-validation
+
+# --- Separability gate ---
+gate:
+  threshold: 0.60        # Minimum CV AUC for decomposition
+
+# --- Main regime simulations (Table 1, Figure 2) ---
+main_regimes:
+  n_total: 200
+  n_pos: 50
+  p: 20
+  n_replicates: 50
+  independence:
+    effect: 1.0
+  redundancy:
+    effect: 1.0
+    alpha: 0.9           # B = 0.9*A + noise
+  shared_axis:
+    effect: 1.0
+    anticorr: 1.0
+
+# --- Power analysis (Table 2, Figure 3) ---
+power_analysis:
+  n_total: 89
+  p: 20
+  anticorr: 1.0
+  n_replicates: 50
+  effect_strengths: [0.10, 0.20, 0.30, 0.50, 0.75, 1.00]
+  n_pos_values: [9, 15, 25]
+
+# --- Ceiling artifact (Table 3, Figure 4) ---
+ceiling_artifact:
+  ceiling_case:
+    n_total: 89
+    n_pos: 12
+    p: 20
+    effect: 1.0
+    anticorr: 2.0
+    seed: 23
+  trm_like_case:
+    n_total: 89
+    n_pos: 12
+    p: 20
+    effect: 0.08
+    anticorr: 0.3
+    seed: 77
+
+# --- Dimensionality sensitivity (Supp Figure S3) ---
+dimensionality:
+  n_total: 200
+  n_pos: 50
+  effect: 1.0
+  anticorr: 1.0
+  alpha: 0.9
+  n_replicates: 50
+  p_values: [5, 10, 20, 40, 80]
