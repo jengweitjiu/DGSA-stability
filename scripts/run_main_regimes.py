@@ -16,6 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
+from dgsa.config import load_config, numpy_converter
 from dgsa.simulation import generate_dataset
 from dgsa.ablation import compute_synergy
 from dgsa.evaluation import run_replicates
@@ -52,15 +53,19 @@ def main():
     args = parser.parse_args()
 
     # === Table 1: Representative simulations ===
-    print("\n" + "="*60)
-    print("TABLE 1: Representative Simulations (n=200, n_pos=50, p=20)")
-    print("="*60)
-
+    cfg = load_config()
+    mr = cfg["main_regimes"]
+    base = {"n_total": mr["n_total"], "n_pos": mr["n_pos"], "p": mr["p"]}
     configs = {
-        "independence": {"n_total": 200, "n_pos": 50, "p": 20, "effect": 1.0},
-        "redundancy":   {"n_total": 200, "n_pos": 50, "p": 20, "effect": 1.0, "alpha": 0.9},
-        "shared_axis":  {"n_total": 200, "n_pos": 50, "p": 20, "effect": 1.0, "anticorr": 1.0},
+        "independence": {**base, **mr["independence"]},
+        "redundancy":   {**base, **mr["redundancy"]},
+        "shared_axis":  {**base, **mr["shared_axis"]},
     }
+
+    print("\n" + "="*60)
+    print(f"TABLE 1: Representative Simulations "
+          f"(n={base['n_total']}, n_pos={base['n_pos']}, p={base['p']})")
+    print("="*60)
 
     representatives = {}
     for regime, kwargs in configs.items():
@@ -119,18 +124,8 @@ def main():
         "depth_shared_axis": depth_summary,
         "params": {"seed": args.seed, "replicates": args.replicates},
     }
-    # Convert numpy types for JSON serialization
-    def convert(obj):
-        if isinstance(obj, (np.integer,)):
-            return int(obj)
-        if isinstance(obj, (np.floating,)):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return obj
-
     with open(args.output, "w") as f:
-        json.dump(output, f, indent=2, default=convert)
+        json.dump(output, f, indent=2, default=numpy_converter)
     print(f"\nResults saved to {args.output}")
 
 

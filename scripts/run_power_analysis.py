@@ -17,6 +17,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
+from dgsa.config import load_config, numpy_converter
 from dgsa.evaluation import power_analysis
 
 
@@ -27,21 +28,23 @@ def main():
     parser.add_argument("--output", type=str, default="figures/power_analysis.json")
     args = parser.parse_args()
 
-    effect_strengths = [0.10, 0.20, 0.30, 0.50, 0.75, 1.00]
-    n_pos_values = [9, 15, 25]
+    cfg = load_config()
+    pa = cfg["power_analysis"]
+    effect_strengths = pa["effect_strengths"]
+    n_pos_values = pa["n_pos_values"]
 
     print("="*70)
-    print(f"POWER ANALYSIS (n_total=89, p=20, anticorr=1.0, "
-          f"seed={args.seed}, reps={args.replicates})")
+    print(f"POWER ANALYSIS (n_total={pa['n_total']}, p={pa['p']}, "
+          f"anticorr={pa['anticorr']}, seed={args.seed}, reps={args.replicates})")
     print("="*70)
 
     table = power_analysis(
         effect_strengths=effect_strengths,
         n_pos_values=n_pos_values,
-        n_total=89,
-        p=20,
+        n_total=pa["n_total"],
+        p=pa["p"],
         n_replicates=args.replicates,
-        anticorr=1.0,
+        anticorr=pa["anticorr"],
         master_seed=args.seed,
     )
 
@@ -67,23 +70,17 @@ def main():
 
     # Save
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
-    def convert(obj):
-        if isinstance(obj, (np.integer,)):
-            return int(obj)
-        if isinstance(obj, (np.floating,)):
-            return float(obj)
-        return obj
-
     with open(args.output, "w") as f:
         json.dump({
             "table2": table,
             "params": {
                 "effect_strengths": effect_strengths,
                 "n_pos_values": n_pos_values,
-                "n_total": 89, "p": 20, "anticorr": 1.0,
+                "n_total": pa["n_total"], "p": pa["p"],
+                "anticorr": pa["anticorr"],
                 "seed": args.seed, "replicates": args.replicates,
             },
-        }, f, indent=2, default=convert)
+        }, f, indent=2, default=numpy_converter)
     print(f"\nResults saved to {args.output}")
 
 

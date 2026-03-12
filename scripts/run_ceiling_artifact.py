@@ -16,6 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
+from dgsa.config import load_config, numpy_converter
 from dgsa.simulation import generate_ceiling_case, generate_trm_like
 from dgsa.ablation import compute_synergy, full_decomposition
 from dgsa.evaluation import evaluate_metrics
@@ -74,16 +75,26 @@ def print_case(name, X, y, info, gate_threshold=0.60):
 
 
 def main():
+    cfg = load_config()
+    cc = cfg["ceiling_artifact"]["ceiling_case"]
+    tc = cfg["ceiling_artifact"]["trm_like_case"]
+
     print("="*60)
     print("TABLE 3: In-Sample vs Cross-Validated Evaluation")
     print("="*60)
 
     # Case 1: Ceiling artifact (well-separated)
-    X_ceil, y_ceil, info_ceil = generate_ceiling_case()
+    X_ceil, y_ceil, info_ceil = generate_ceiling_case(
+        seed=cc["seed"], n_total=cc["n_total"], n_pos=cc["n_pos"],
+        p=cc["p"], effect=cc["effect"], anticorr=cc["anticorr"],
+    )
     ceil_result = print_case("Ceiling Artifact", X_ceil, y_ceil, info_ceil)
 
     # Case 2: TRM-like (below gate)
-    X_trm, y_trm, info_trm = generate_trm_like()
+    X_trm, y_trm, info_trm = generate_trm_like(
+        seed=tc["seed"], n_total=tc["n_total"], n_pos=tc["n_pos"],
+        p=tc["p"], effect=tc["effect"], anticorr=tc["anticorr"],
+    )
     trm_result = print_case("TRM-like Gating", X_trm, y_trm, info_trm)
 
     # Summary comparison
@@ -100,13 +111,6 @@ def main():
     # Save
     os.makedirs("figures", exist_ok=True)
 
-    def convert(obj):
-        if isinstance(obj, (np.integer,)):
-            return int(obj)
-        if isinstance(obj, (np.floating, np.bool_)):
-            return float(obj)
-        return obj
-
     with open("figures/ceiling_artifact.json", "w") as f:
         json.dump({
             "ceiling": {
@@ -121,7 +125,7 @@ def main():
                 "cv_auc": trm_result["metrics"]["cv_auc"],
                 "gate_pass": trm_result["cv_result"]["gate_pass"],
             },
-        }, f, indent=2, default=convert)
+        }, f, indent=2, default=numpy_converter)
     print(f"\nResults saved to figures/ceiling_artifact.json")
 
 

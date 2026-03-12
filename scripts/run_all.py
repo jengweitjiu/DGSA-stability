@@ -49,10 +49,12 @@ def main():
         start = time.time()
 
         cmd = [sys.executable, script]
-        if "run_all" not in script:
+        # run_ceiling_artifact.py accepts no CLI args
+        if "ceiling" not in script:
             cmd.extend(["--seed", str(args.seed)])
-            if "replicates" not in script or "ceiling" not in script:
-                cmd.extend(["--replicates", str(args.replicates)])
+        # Only some scripts accept --replicates
+        if "ceiling" not in script and "spec_vs" not in script:
+            cmd.extend(["--replicates", str(args.replicates)])
 
         result = subprocess.run(cmd, capture_output=False)
         elapsed = time.time() - start

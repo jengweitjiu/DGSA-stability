@@ -16,6 +16,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
+from dgsa.config import load_config, numpy_converter
 from dgsa.evaluation import dimensionality_analysis
 
 
@@ -26,21 +27,24 @@ def main():
     parser.add_argument("--output", type=str, default="figures/dimensionality.json")
     args = parser.parse_args()
 
-    p_values = [5, 10, 20, 40, 80]
+    cfg = load_config()
+    dim = cfg["dimensionality"]
+    p_values = dim["p_values"]
 
     print("="*60)
-    print(f"DIMENSIONALITY SENSITIVITY (n=200, n_pos=50, effect=1.0)")
+    print(f"DIMENSIONALITY SENSITIVITY "
+          f"(n={dim['n_total']}, n_pos={dim['n_pos']}, effect={dim['effect']})")
     print("="*60)
 
     table = dimensionality_analysis(
         p_values=p_values,
         regimes=("redundancy", "shared_axis"),
         n_replicates=args.replicates,
-        n_total=200,
-        n_pos=50,
-        effect=1.0,
-        anticorr=1.0,
-        alpha=0.9,
+        n_total=dim["n_total"],
+        n_pos=dim["n_pos"],
+        effect=dim["effect"],
+        anticorr=dim["anticorr"],
+        alpha=dim["alpha"],
         master_seed=args.seed,
     )
 
@@ -55,16 +59,9 @@ def main():
 
     os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
 
-    def convert(obj):
-        if isinstance(obj, (np.integer,)):
-            return int(obj)
-        if isinstance(obj, (np.floating,)):
-            return float(obj)
-        return obj
-
     with open(args.output, "w") as f:
         json.dump({"dimensionality": table, "p_values": p_values}, f,
-                  indent=2, default=convert)
+                  indent=2, default=numpy_converter)
     print(f"\nResults saved to {args.output}")
 
 

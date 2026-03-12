@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 from scipy.stats import spearmanr
+from dgsa.config import load_config
 from dgsa.simulation import generate_dataset
 from dgsa.ablation import specification_rank, stability_rank
 
@@ -27,10 +28,13 @@ def main():
     parser.add_argument("--output", type=str, default="figures/spec_vs_stability.json")
     args = parser.parse_args()
 
+    cfg = load_config()
+    mr = cfg["main_regimes"]
+    base = {"n_total": mr["n_total"], "n_pos": mr["n_pos"], "p": mr["p"]}
     configs = {
-        "independence": {"n_total": 200, "n_pos": 50, "p": 20, "effect": 1.0},
-        "redundancy":   {"n_total": 200, "n_pos": 50, "p": 20, "effect": 1.0, "alpha": 0.9},
-        "shared_axis":  {"n_total": 200, "n_pos": 50, "p": 20, "effect": 1.0, "anticorr": 1.0},
+        "independence": {**base, **mr["independence"]},
+        "redundancy":   {**base, **mr["redundancy"]},
+        "shared_axis":  {**base, **mr["shared_axis"]},
     }
 
     print("="*60)
